@@ -1,0 +1,16 @@
+[package]
+authors = ["Vivian Hellyer <vivian@hellyer.dev>"]
+categories = []
+description = "Get setup with serving a directory quickly."
+documentation = "https://github.com/vivian/picoserve"
+edition = "2015"
+include = ["src/**/*.rs", "Cargo.toml"]
+keywords = []
+license = "ISC"
+name = "picoserve"
+publish = false
+readme = "README.md"
+repository = "https://github.com/vivian/picoserve.git"
+version = "0.1.0"
+
+[dependencies]
