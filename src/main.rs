@@ -1,6 +1,6 @@
 mod env;
+mod extension;
 mod index;
-mod mime;
 mod response;
 
 use env::Environment;

@@ -1,4 +1,4 @@
-use crate::mime;
+use crate::extension::Extension;
 use std::{
     error::Error,
     fmt::{Display, Formatter, Result as FmtResult},
@@ -150,7 +150,7 @@ impl PreparedResponse<'_> {
             buf.write_all(b"\r\n")?;
         }
 
-        if let Some(content_type) = self.extension.map(mime::from_ext) {
+        if let Some(content_type) = self.extension.map(|e| Extension::new(e).mime()) {
             buf.write_all(b"Content-Type: ")?;
             buf.write_all(content_type.as_bytes())?;
             buf.write_all(b"\r\n")?;
