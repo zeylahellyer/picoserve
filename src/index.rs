@@ -1,4 +1,4 @@
-use crate::response::{self, Status, WriteError};
+use crate::response::{Response, WriteError};
 use std::{
     error::Error,
     fmt::{Display, Formatter, Result as FmtResult, Write as _},
@@ -127,13 +127,14 @@ pub fn list(mut stream: TcpStream, path: PathBuf) -> Result<(), ListError> {
         }
     }
 
-    response::write(&mut stream, Status::Ok, buf.as_bytes(), None, None).map_err(|source| {
-        ListError::WritingToStream {
+    Response::new(buf.as_bytes())
+        .ok()
+        .write(&mut stream)
+        .map_err(|source| ListError::WritingToStream {
             buf,
             remote_ip: stream.peer_addr().ok(),
             source,
-        }
-    })
+        })
 }
 
 fn write_anchor(buf: &mut String, path: &str) {

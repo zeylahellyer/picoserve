@@ -4,7 +4,7 @@ mod mime;
 mod response;
 
 use env::Environment;
-use response::Status;
+use response::Response;
 use std::{
     error::Error,
     ffi::OsStr,
@@ -42,13 +42,9 @@ fn handle_stream(
     let _ = stream.read(&mut buf)?;
 
     if !buf.starts_with(b"GET /") {
-        response::write(
-            &mut stream,
-            Status::MethodNotAllowed,
-            b"",
-            None,
-            Some(&[b"GET"]),
-        )?;
+        Response::new(b"")
+            .method_not_allowed(&[b"GET"])
+            .write(&mut stream)?;
 
         return Ok(());
     }
@@ -72,22 +68,21 @@ fn handle_stream(
     }
 
     match fs::read(&path) {
-        Ok(bytes) => response::write(
-            &mut stream,
-            Status::Ok,
-            &bytes,
-            path.extension().and_then(OsStr::to_str),
-            None,
-        )
-        .map_err(From::from),
+        Ok(bytes) => Response::new(&bytes)
+            .extension(path.extension().and_then(OsStr::to_str))
+            .ok()
+            .write(&mut stream)
+            .map_err(From::from),
         Err(source) => {
-            let code = match source.kind() {
-                ErrorKind::Other if source.raw_os_error() == Some(21) => Status::Forbidden,
-                ErrorKind::NotFound => Status::NotFound,
-                _ => Status::InternalServiceError,
+            let response = Response::new(b"");
+
+            let response = match source.kind() {
+                ErrorKind::Other if source.raw_os_error() == Some(21) => response.forbidden(),
+                ErrorKind::NotFound => response.not_found(),
+                _ => response.internal_service_error(),
             };
 
-            response::write(&mut stream, code, b"", None, None).map_err(From::from)
+            response.write(&mut stream).map_err(From::from)
         }
     }
 }

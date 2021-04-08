@@ -30,94 +30,149 @@ impl Error for WriteError {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Status {
+enum Status<'a> {
     Forbidden,
     InternalServiceError,
-    MethodNotAllowed,
+    MethodNotAllowed { allow: &'a [&'a [u8]] },
     NotFound,
     Ok,
 }
 
-impl Status {
+impl Status<'_> {
     fn name(&self) -> &[u8] {
         match self {
             Self::Forbidden => b"403 FORBIDDEN",
             Self::InternalServiceError => b"500 INTERNAL SERVICE ERROR",
-            Self::MethodNotAllowed => b"405 METHOD NOT ALLOWED",
+            Self::MethodNotAllowed { .. } => b"405 METHOD NOT ALLOWED",
             Self::NotFound => b"404 NOT FOUND",
             Self::Ok => b"200 OK",
         }
     }
 }
 
-/// Write a response to a writer.
-///
-/// Uses a provided status, content, and extension type to write the response.
-///
-/// Extension is optional and will be mapped to a MIME when provided.
-pub fn write(
-    buf: &mut dyn Write,
-    status: Status,
-    content: &[u8],
-    extension: Option<&str>,
-    allow: Option<&[&[u8]]>,
-) -> Result<(), WriteError> {
-    write_inner(buf, status, content, extension, allow).map_err(|source| WriteError::Io { source })
+pub struct Response<'a> {
+    content: &'a [u8],
+    extension: Option<&'a str>,
 }
 
-fn write_inner(
-    buf: &mut dyn Write,
-    status: Status,
-    content: &[u8],
-    extension: Option<&str>,
-    allow: Option<&[&[u8]]>,
-) -> Result<(), IoError> {
-    buf.write_all(b"HTTP/1.1 ")?;
-    buf.write_all(status.name())?;
-    buf.write_all(b"\r\n")?;
+impl<'a> Response<'a> {
+    pub fn new(content: &'a [u8]) -> Self {
+        Self {
+            content,
+            extension: None,
+        }
+    }
 
-    if let Some(allow) = allow {
-        if !allow.is_empty() {
-            buf.write_all(b"Allow: ")?;
+    pub fn extension(mut self, extension: Option<&'a str>) -> Self {
+        self.extension = extension;
 
-            let total = allow.len() - 1;
+        self
+    }
 
-            for (idx, method) in allow.iter().enumerate() {
-                buf.write_all(method)?;
+    pub fn ok(self) -> PreparedResponse<'a> {
+        PreparedResponse {
+            content: self.content,
+            extension: self.extension,
+            status: Status::Ok,
+        }
+    }
 
-                if idx < total {
-                    buf.write_all(b", ")?;
+    pub fn forbidden(self) -> PreparedResponse<'a> {
+        PreparedResponse {
+            content: self.content,
+            extension: self.extension,
+            status: Status::Forbidden,
+        }
+    }
+
+    pub fn not_found(self) -> PreparedResponse<'a> {
+        PreparedResponse {
+            content: self.content,
+            extension: self.extension,
+            status: Status::NotFound,
+        }
+    }
+
+    pub fn method_not_allowed(self, allow: &'a [&'a [u8]]) -> PreparedResponse<'a> {
+        PreparedResponse {
+            content: self.content,
+            extension: self.extension,
+            status: Status::MethodNotAllowed { allow },
+        }
+    }
+
+    pub fn internal_service_error(self) -> PreparedResponse<'a> {
+        PreparedResponse {
+            content: self.content,
+            extension: self.extension,
+            status: Status::InternalServiceError,
+        }
+    }
+}
+
+pub struct PreparedResponse<'a> {
+    content: &'a [u8],
+    extension: Option<&'a str>,
+    status: Status<'a>,
+}
+
+impl PreparedResponse<'_> {
+    /// Write a response to a writer.
+    ///
+    /// Uses a provided status, content, and extension type to write the response.
+    ///
+    /// Extension is optional and will be mapped to a MIME when provided.
+    pub fn write(&self, buf: &mut dyn Write) -> Result<(), WriteError> {
+        self.write_inner(buf)
+            .map_err(|source| WriteError::Io { source })
+    }
+
+    fn write_inner(&self, buf: &mut dyn Write) -> Result<(), IoError> {
+        buf.write_all(b"HTTP/1.1 ")?;
+        buf.write_all(self.status.name())?;
+        buf.write_all(b"\r\n")?;
+
+        if let Status::MethodNotAllowed { allow } = self.status {
+            if !allow.is_empty() {
+                buf.write_all(b"Allow: ")?;
+
+                let total = allow.len() - 1;
+
+                for (idx, method) in allow.iter().enumerate() {
+                    buf.write_all(method)?;
+
+                    if idx < total {
+                        buf.write_all(b", ")?;
+                    }
                 }
             }
 
             buf.write_all(b"\r\n")?;
         }
+
+        if let Some(content_type) = self.extension.map(mime::from_ext) {
+            buf.write_all(b"Content-Type: ")?;
+            buf.write_all(content_type.as_bytes())?;
+            buf.write_all(b"\r\n")?;
+        }
+
+        buf.write_all(b"Content-Length: ")?;
+        buf.write_fmt(format_args!("{}", self.content.len()))?;
+        buf.write_all(b"\r\n\r\n")?;
+
+        buf.write_all(&self.content)
     }
-
-    if let Some(content_type) = extension.map(mime::from_ext) {
-        buf.write_all(b"Content-Type: ")?;
-        buf.write_all(content_type.as_bytes())?;
-        buf.write_all(b"\r\n")?;
-    }
-
-    buf.write_all(b"Content-Length: ")?;
-    buf.write_fmt(format_args!("{}", content.len()))?;
-    buf.write_all(b"\r\n\r\n")?;
-
-    buf.write_all(&content)
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Status;
+    use super::Response;
     use std::error::Error;
 
     #[test]
     fn test_ok() -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut buf = Vec::new();
-
-        super::write(&mut buf, Status::Ok, b"test", None, None)?;
+        Response::new(b"test").ok().write(&mut buf)?;
 
         assert_eq!(buf, b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ntest");
 
