@@ -117,6 +117,8 @@ pub struct PreparedResponse<'a> {
 }
 
 impl PreparedResponse<'_> {
+    const SERVER: &'static str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"));
+
     /// Write a response to a writer.
     ///
     /// Uses a provided status, content, and extension type to write the response.
@@ -130,6 +132,9 @@ impl PreparedResponse<'_> {
     fn write_inner(&self, buf: &mut dyn Write) -> Result<(), IoError> {
         buf.write_all(b"HTTP/1.1 ")?;
         buf.write_all(self.status.name())?;
+        buf.write_all(b"\r\n")?;
+        buf.write_all(b"Server: ")?;
+        buf.write_all(Self::SERVER.as_bytes())?;
         buf.write_all(b"\r\n")?;
 
         if let Status::MethodNotAllowed { allow } = self.status {
@@ -166,7 +171,7 @@ impl PreparedResponse<'_> {
 
 #[cfg(test)]
 mod tests {
-    use super::Response;
+    use super::{PreparedResponse, Response};
     use std::error::Error;
 
     #[test]
@@ -174,7 +179,14 @@ mod tests {
         let mut buf = Vec::new();
         Response::new(b"test").ok().write(&mut buf)?;
 
-        assert_eq!(buf, b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ntest");
+        assert_eq!(
+            buf,
+            format!(
+                "HTTP/1.1 200 OK\r\nServer: {}\r\nContent-Length: 4\r\n\r\ntest",
+                PreparedResponse::SERVER
+            )
+            .into_bytes()
+        );
 
         Ok(())
     }
