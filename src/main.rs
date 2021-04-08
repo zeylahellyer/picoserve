@@ -71,7 +71,8 @@ fn handle_stream(
             Status::Ok,
             &bytes,
             path.extension().and_then(OsStr::to_str),
-        ).map_err(From::from),
+        )
+        .map_err(From::from),
         Err(source) => {
             let code = match source.kind() {
                 ErrorKind::Other if source.raw_os_error() == Some(21) => Status::Forbidden,

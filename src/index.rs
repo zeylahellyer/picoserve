@@ -36,9 +36,7 @@ impl Display for ListError {
                 f.write_str(&path.to_string_lossy())?;
                 f.write_char('\'')
             }
-            Self::ReadingEntry { .. } => {
-                f.write_str("failed to read entry data in directory")
-            }
+            Self::ReadingEntry { .. } => f.write_str("failed to read entry data in directory"),
             Self::ReadingMetadata { path, .. } => {
                 f.write_str("failed to read metadata for path '")?;
                 f.write_str(&path.to_string_lossy())?;
