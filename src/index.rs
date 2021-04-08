@@ -127,7 +127,7 @@ pub fn list(mut stream: TcpStream, path: PathBuf) -> Result<(), ListError> {
         }
     }
 
-    response::write(&mut stream, Status::Ok, buf.as_bytes(), None).map_err(|source| {
+    response::write(&mut stream, Status::Ok, buf.as_bytes(), None, None).map_err(|source| {
         ListError::WritingToStream {
             buf,
             remote_ip: stream.peer_addr().ok(),

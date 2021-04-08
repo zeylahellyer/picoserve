@@ -42,7 +42,13 @@ fn handle_stream(
     let _ = stream.read(&mut buf)?;
 
     if !buf.starts_with(b"GET /") {
-        response::write(&mut stream, Status::BadRequest, b"", None)?;
+        response::write(
+            &mut stream,
+            Status::MethodNotAllowed,
+            b"",
+            None,
+            Some(&[b"GET"]),
+        )?;
 
         return Ok(());
     }
@@ -71,6 +77,7 @@ fn handle_stream(
             Status::Ok,
             &bytes,
             path.extension().and_then(OsStr::to_str),
+            None,
         )
         .map_err(From::from),
         Err(source) => {
@@ -80,7 +87,7 @@ fn handle_stream(
                 _ => Status::InternalServiceError,
             };
 
-            response::write(&mut stream, code, b"", None).map_err(From::from)
+            response::write(&mut stream, code, b"", None, None).map_err(From::from)
         }
     }
 }

@@ -32,9 +32,9 @@ impl Error for WriteError {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum Status {
-    BadRequest,
     Forbidden,
     InternalServiceError,
+    MethodNotAllowed,
     NotFound,
     Ok,
 }
@@ -42,9 +42,9 @@ pub enum Status {
 impl Status {
     fn name(&self) -> &[u8] {
         match self {
-            Self::BadRequest => b"400 BAD REQUEST",
             Self::Forbidden => b"403 FORBIDDEN",
             Self::InternalServiceError => b"500 INTERNAL SERVICE ERROR",
+            Self::MethodNotAllowed => b"405 METHOD NOT ALLOWED",
             Self::NotFound => b"404 NOT FOUND",
             Self::Ok => b"200 OK",
         }
@@ -61,8 +61,9 @@ pub fn write(
     status: Status,
     content: &[u8],
     extension: Option<&str>,
+    allow: Option<&[&[u8]]>,
 ) -> Result<(), WriteError> {
-    write_inner(buf, status, content, extension).map_err(|source| WriteError::Io { source })
+    write_inner(buf, status, content, extension, allow).map_err(|source| WriteError::Io { source })
 }
 
 fn write_inner(
@@ -70,10 +71,29 @@ fn write_inner(
     status: Status,
     content: &[u8],
     extension: Option<&str>,
+    allow: Option<&[&[u8]]>,
 ) -> Result<(), IoError> {
     buf.write_all(b"HTTP/1.1 ")?;
     buf.write_all(status.name())?;
     buf.write_all(b"\r\n")?;
+
+    if let Some(allow) = allow {
+        if !allow.is_empty() {
+            buf.write_all(b"Allow: ")?;
+
+            let total = allow.len() - 1;
+
+            for (idx, method) in allow.iter().enumerate() {
+                buf.write_all(method)?;
+
+                if idx < total {
+                    buf.write_all(b", ")?;
+                }
+            }
+
+            buf.write_all(b"\r\n")?;
+        }
+    }
 
     if let Some(content_type) = extension.map(mime::from_ext) {
         buf.write_all(b"Content-Type: ")?;
@@ -97,7 +117,7 @@ mod tests {
     fn test_ok() -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut buf = Vec::new();
 
-        super::write(&mut buf, Status::Ok, b"test", None)?;
+        super::write(&mut buf, Status::Ok, b"test", None, None)?;
 
         assert_eq!(buf, b"HTTP/1.1 200 OK\r\nContent-Length: 4\r\n\r\ntest");
 
