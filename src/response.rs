@@ -253,7 +253,7 @@ mod tests {
         assert_eq!(
             buf,
             format!(
-                "HTTP/1.1 200 OK\r\nServer: {}\r\nContent-Length: 4\r\n\r\ntest",
+                "HTTP/1.1 200 OK\r\nServer: {}\r\nContent-Type: text/plain\r\nContent-Length: 4\r\n\r\ntest",
                 PreparedResponse::SERVER
             )
             .into_bytes()

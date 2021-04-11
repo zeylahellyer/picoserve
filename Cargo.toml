@@ -14,3 +14,6 @@ repository = "https://github.com/vivian/picoserve.git"
 version = "0.1.0"
 
 [dependencies]
+
+[dev-dependencies]
+rusty-hook = "0.11.2"

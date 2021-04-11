@@ -263,10 +263,7 @@ mod tests {
             Some(Mime::TextHtml),
             Extension::new("html").map(|e| e.mime())
         );
-        assert_eq!(
-            Some(Mime::TextPlain),
-            Extension::new("rs").map(|e| e.mime())
-        );
+        assert!(Extension::new("rs").map(|e| e.mime()).is_none());
     }
 
     #[test]
