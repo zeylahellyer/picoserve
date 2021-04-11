@@ -30,6 +30,24 @@ impl Error for WriteError {
     }
 }
 
+enum Header {
+    Allow,
+    ContentLength,
+    ContentType,
+    Server,
+}
+
+impl Header {
+    fn name(&self) -> &[u8] {
+        match self {
+            Self::Allow => b"Allow",
+            Self::ContentLength => b"Content-Length",
+            Self::ContentType => b"Content-Type",
+            Self::Server => b"Server",
+        }
+    }
+}
+
 enum Status<'a> {
     Forbidden,
     InternalServiceError,
@@ -133,46 +151,92 @@ impl PreparedResponse<'_> {
         buf.write_all(b"HTTP/1.1 ")?;
         buf.write_all(self.status.name())?;
         buf.write_all(b"\r\n")?;
-        buf.write_all(b"Server: ")?;
-        buf.write_all(Self::SERVER.as_bytes())?;
-        buf.write_all(b"\r\n")?;
+        Self::header(buf, Header::Server, Self::SERVER.as_bytes())?;
 
         if let Status::MethodNotAllowed { allow } = self.status {
             if !allow.is_empty() {
-                buf.write_all(b"Allow: ")?;
+                Self::header_with(buf, Header::Allow, |buf| {
+                    let total = allow.len() - 1;
 
-                let total = allow.len() - 1;
+                    for (idx, method) in allow.iter().enumerate() {
+                        buf.write_all(method)?;
 
-                for (idx, method) in allow.iter().enumerate() {
-                    buf.write_all(method)?;
-
-                    if idx < total {
-                        buf.write_all(b", ")?;
+                        if idx < total {
+                            buf.write_all(b", ")?;
+                        }
                     }
-                }
+
+                    Ok(())
+                })?;
             }
-
-            buf.write_all(b"\r\n")?;
         }
 
-        if let Some(content_type) = self.extension.map(|e| Extension::new(e).mime()) {
-            buf.write_all(b"Content-Type: ")?;
-            buf.write_all(content_type.as_bytes())?;
-            buf.write_all(b"\r\n")?;
+        if let Some(mime) = self.extension.map(|e| Extension::new(e).mime()) {
+            Self::header(buf, Header::ContentType, mime.as_bytes())?;
         }
 
-        buf.write_all(b"Content-Length: ")?;
-        buf.write_fmt(format_args!("{}", self.content.len()))?;
-        buf.write_all(b"\r\n\r\n")?;
+        Self::header(
+            buf,
+            Header::ContentLength,
+            self.content.len().to_string().as_bytes(),
+        )?;
+        buf.write_all(b"\r\n")?;
 
         buf.write_all(&self.content)
+    }
+
+    fn header(buf: &mut dyn Write, header: Header, value: &[u8]) -> Result<(), IoError> {
+        Self::header_with(buf, header, |buf| buf.write_all(value))
+    }
+
+    fn header_with(
+        buf: &mut dyn Write,
+        header: Header,
+        f: impl FnOnce(&mut dyn Write) -> Result<(), IoError>,
+    ) -> Result<(), IoError> {
+        buf.write_all(header.name())?;
+        buf.write_all(b": ")?;
+        f(buf)?;
+
+        buf.write_all(b"\r\n")
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{PreparedResponse, Response};
+    use super::{Header, PreparedResponse, Response};
+    use crate::extension::Extension;
     use std::error::Error;
+
+    #[test]
+    fn test_header_names() {
+        assert_eq!(b"Allow", Header::Allow.name());
+        assert_eq!(b"Content-Length", Header::ContentLength.name());
+        assert_eq!(b"Content-Type", Header::ContentType.name());
+        assert_eq!(b"Server", Header::Server.name());
+    }
+
+    #[test]
+    fn test_response_header() -> Result<(), Box<dyn Error + Send + Sync>> {
+        let mut buf = Vec::new();
+        PreparedResponse::header(&mut buf, Header::ContentType, Extension::Json.mime().as_bytes())?;
+        assert_eq!(b"Content-Type: application/json\r\n".as_ref(), buf);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_response_header_with() -> Result<(), Box<dyn Error + Send + Sync>> {
+        let mut buf = Vec::new();
+        PreparedResponse::header_with(&mut buf, Header::Allow, |buf| {
+            buf.write_all(b"GET")?;
+
+            buf.write_all(b", POST")
+        })?;
+        assert_eq!(b"Allow: GET, POST\r\n".as_ref(), buf);
+
+        Ok(())
+    }
 
     #[test]
     fn test_ok() -> Result<(), Box<dyn Error + Send + Sync>> {
