@@ -140,7 +140,7 @@ pub fn list(mut stream: TcpStream, path: PathBuf) -> Result<(), ListError> {
 fn write_anchor(buf: &mut String, path: &str) {
     buf.push_str("<a href='./");
     buf.push_str(&path);
-    buf.push_str("/'>");
+    buf.push_str("'>");
     buf.push_str(&path);
     buf.push_str("</a><br />");
 }
