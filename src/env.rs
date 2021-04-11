@@ -6,7 +6,32 @@ use std::{
     net::{IpAddr, Ipv4Addr},
     num::ParseIntError,
     path::{Path, PathBuf},
+    process,
 };
+
+const HELP: &str = concat!(
+    env!("CARGO_PKG_NAME"),
+    " ",
+    env!("CARGO_PKG_VERSION"),
+    "
+",
+    env!("CARGO_PKG_AUTHORS"),
+    "
+",
+    env!("CARGO_PKG_DESCRIPTION"),
+    "
+
+FLAGS:
+
+    --help          Print help information.
+    --index         Enable indexing for browser directory viewing.
+
+OPTIONS:
+
+    --dir <PATH>    Path of the directory to serve.
+    --host <IP>     IP address of the host to bind to.
+    --port <NUMBER> Port to bind to."
+);
 
 #[derive(Debug)]
 pub enum EnvironmentError {
@@ -68,6 +93,11 @@ impl Environment {
                     let value = value(&mut args, name)?;
 
                     dir.replace(PathBuf::from(value));
+                }
+                "--help" => {
+                    println!("{}", HELP);
+
+                    process::exit(0);
                 }
                 "--host" => {
                     let value = value(&mut args, name)?;
