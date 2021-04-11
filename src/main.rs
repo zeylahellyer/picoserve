@@ -1,5 +1,5 @@
+mod content_type;
 mod env;
-mod extension;
 mod index;
 mod response;
 

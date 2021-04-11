@@ -1,4 +1,4 @@
-use crate::extension::Extension;
+use crate::content_type::{Extension, Mime};
 use std::{
     error::Error,
     fmt::{Display, Formatter, Result as FmtResult},
@@ -171,9 +171,12 @@ impl PreparedResponse<'_> {
             }
         }
 
-        if let Some(mime) = self.extension.map(|e| Extension::new(e).mime()) {
-            Self::header(buf, Header::ContentType, mime.as_bytes())?;
-        }
+        let mime = match self.extension.and_then(Extension::new).map(|e| e.mime()) {
+            Some(mime) => mime,
+            None if self.content.is_empty() => Mime::OctetStream,
+            _ => Mime::from_input(self.content),
+        };
+        Self::header(buf, Header::ContentType, mime.name().as_bytes())?;
 
         Self::header(
             buf,
@@ -205,7 +208,7 @@ impl PreparedResponse<'_> {
 #[cfg(test)]
 mod tests {
     use super::{Header, PreparedResponse, Response};
-    use crate::extension::Extension;
+    use crate::content_type::Extension;
     use std::error::Error;
 
     #[test]
@@ -219,7 +222,11 @@ mod tests {
     #[test]
     fn test_response_header() -> Result<(), Box<dyn Error + Send + Sync>> {
         let mut buf = Vec::new();
-        PreparedResponse::header(&mut buf, Header::ContentType, Extension::Json.mime().as_bytes())?;
+        PreparedResponse::header(
+            &mut buf,
+            Header::ContentType,
+            Extension::Json.mime().name().as_bytes(),
+        )?;
         assert_eq!(b"Content-Type: application/json\r\n".as_ref(), buf);
 
         Ok(())
