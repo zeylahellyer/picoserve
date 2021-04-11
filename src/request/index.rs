@@ -9,7 +9,7 @@ use std::{
 };
 
 #[derive(Debug)]
-pub enum ListError {
+pub enum IndexError {
     ReadingDirectory {
         path: PathBuf,
         source: IoError,
@@ -28,7 +28,7 @@ pub enum ListError {
     },
 }
 
-impl Display for ListError {
+impl Display for IndexError {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         match self {
             Self::ReadingDirectory { path, .. } => {
@@ -60,7 +60,7 @@ impl Display for ListError {
     }
 }
 
-impl Error for ListError {
+impl Error for IndexError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
             Self::ReadingDirectory { source, .. } => Some(source),
@@ -71,20 +71,21 @@ impl Error for ListError {
     }
 }
 
-pub fn list(mut stream: TcpStream, path: PathBuf) -> Result<(), ListError> {
+pub fn index(stream: &mut TcpStream, path: PathBuf) -> Result<(), IndexError> {
     let mut buf = String::new();
 
     let mut dirs = Vec::new();
     let mut files = Vec::new();
 
-    let dir = fs::read_dir(&path).map_err(|source| ListError::ReadingDirectory { path, source })?;
+    let dir =
+        fs::read_dir(&path).map_err(|source| IndexError::ReadingDirectory { path, source })?;
 
     for entry in dir {
-        let entry = entry.map_err(|source| ListError::ReadingEntry { source })?;
+        let entry = entry.map_err(|source| IndexError::ReadingEntry { source })?;
 
         let metadata = entry
             .metadata()
-            .map_err(|source| ListError::ReadingMetadata {
+            .map_err(|source| IndexError::ReadingMetadata {
                 path: entry.path(),
                 source,
             })?;
@@ -129,8 +130,8 @@ pub fn list(mut stream: TcpStream, path: PathBuf) -> Result<(), ListError> {
 
     Response::new(buf.as_bytes())
         .ok()
-        .write(&mut stream)
-        .map_err(|source| ListError::WritingToStream {
+        .write(stream)
+        .map_err(|source| IndexError::WritingToStream {
             buf,
             remote_ip: stream.peer_addr().ok(),
             source,
