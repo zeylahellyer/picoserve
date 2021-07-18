@@ -1,7 +1,7 @@
 use crate::response::{Response, WriteError};
 use std::{
     error::Error,
-    fmt::{Display, Formatter, Result as FmtResult, Write as _},
+    fmt::{Display, Formatter, Result as FmtResult},
     fs,
     io::Error as IoError,
     net::{SocketAddr, TcpStream},
@@ -34,21 +34,21 @@ impl Display for IndexError {
             Self::ReadingDirectory { path, .. } => {
                 f.write_str("failed to read directory '")?;
                 f.write_str(&path.to_string_lossy())?;
-                f.write_char('\'')
+                f.write_str("'")
             }
             Self::ReadingEntry { .. } => f.write_str("failed to read entry data in directory"),
             Self::ReadingMetadata { path, .. } => {
                 f.write_str("failed to read metadata for path '")?;
                 f.write_str(&path.to_string_lossy())?;
-                f.write_char('\'')
+                f.write_str("'")
             }
             Self::WritingToStream { buf, remote_ip, .. } => {
                 f.write_str("failed to write to remote (")?;
 
                 if let Some(ip) = remote_ip {
-                    f.write_char('\'')?;
+                    f.write_str("'")?;
                     ip.fmt(f)?;
-                    f.write_char('\'')?;
+                    f.write_str("'")?;
                 } else {
                     f.write_str("unknown")?;
                 }
