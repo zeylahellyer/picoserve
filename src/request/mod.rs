@@ -2,7 +2,7 @@ mod get;
 mod index;
 
 use self::{get::GetError, index::IndexError};
-use crate::{
+use super::{
     env::Environment,
     response::{Response, WriteError},
 };
@@ -27,16 +27,7 @@ impl Display for RequestError {
     }
 }
 
-impl Error for RequestError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Get { source } => Some(source),
-            Self::Index { source } => Some(source),
-            Self::ReadFromStream { source } => Some(source),
-            Self::Write { source } => Some(source),
-        }
-    }
-}
+impl Error for RequestError {}
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub enum RequestedMethod {
@@ -78,13 +69,13 @@ pub fn handle(stream: &mut TcpStream, env: &Environment) -> Result<(), RequestEr
         path
     };
 
-    let path_str = path.to_str().unwrap().trim();
+    let path_str = path.to_str().unwrap().trim_end();
 
     if env.index() && path_str.ends_with('/') {
         return index::index(stream, path).map_err(|source| RequestError::Index { source });
     }
 
-    get::get(stream, path).map_err(|source| RequestError::Get { source })
+    get::get(stream, &path).map_err(|source| RequestError::Get { source })
 }
 
 #[cfg(test)]

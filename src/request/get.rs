@@ -1,4 +1,4 @@
-use crate::response::{Response, WriteError};
+use super::super::response::{Response, WriteError};
 use std::{
     error::Error,
     ffi::OsStr,
@@ -6,12 +6,17 @@ use std::{
     fs,
     io::ErrorKind,
     net::TcpStream,
-    path::PathBuf,
+    path::Path,
 };
 
+/// Error occurred when processing a GET request.
 #[derive(Debug)]
 pub enum GetError {
-    Write { source: WriteError },
+    /// Failed to write to a TCP stream.
+    Write {
+        /// Source of the error.
+        source: WriteError,
+    },
 }
 
 impl Display for GetError {
@@ -20,16 +25,11 @@ impl Display for GetError {
     }
 }
 
-impl Error for GetError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Write { source } => Some(source),
-        }
-    }
-}
+impl Error for GetError {}
 
-pub fn get(stream: &mut TcpStream, path: PathBuf) -> Result<(), GetError> {
-    match fs::read(&path) {
+/// Handle a GET request.
+pub fn get(stream: &mut TcpStream, path: &Path) -> Result<(), GetError> {
+    match fs::read(path) {
         Ok(bytes) => Response::new(&bytes)
             .extension(path.extension().and_then(OsStr::to_str))
             .ok()

@@ -1,4 +1,4 @@
-use crate::content_type::{Extension, Mime};
+use super::content_type::{Extension, Mime};
 use std::{
     error::Error,
     fmt::{Display, Formatter, Result as FmtResult},
@@ -22,14 +22,9 @@ impl Display for WriteError {
     }
 }
 
-impl Error for WriteError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::Io { source } => Some(source),
-        }
-    }
-}
+impl Error for WriteError {}
 
+#[derive(Clone, Copy)]
 enum Header {
     Allow,
     ContentLength,
@@ -142,12 +137,12 @@ impl PreparedResponse<'_> {
     /// Uses a provided status, content, and extension type to write the response.
     ///
     /// Extension is optional and will be mapped to a MIME when provided.
-    pub fn write(&self, buf: &mut dyn Write) -> Result<(), WriteError> {
+    pub fn write(&self, buf: &mut impl Write) -> Result<(), WriteError> {
         self.write_inner(buf)
             .map_err(|source| WriteError::Io { source })
     }
 
-    fn write_inner(&self, buf: &mut dyn Write) -> Result<(), IoError> {
+    fn write_inner(&self, buf: &mut impl Write) -> Result<(), IoError> {
         buf.write_all(b"HTTP/1.1 ")?;
         buf.write_all(self.status.name())?;
         buf.write_all(b"\r\n")?;
@@ -185,17 +180,17 @@ impl PreparedResponse<'_> {
         )?;
         buf.write_all(b"\r\n")?;
 
-        buf.write_all(&self.content)
+        buf.write_all(self.content)
     }
 
-    fn header(buf: &mut dyn Write, header: Header, value: &[u8]) -> Result<(), IoError> {
+    fn header(buf: &mut impl Write, header: Header, value: &[u8]) -> Result<(), IoError> {
         Self::header_with(buf, header, |buf| buf.write_all(value))
     }
 
-    fn header_with(
-        buf: &mut dyn Write,
+    fn header_with<T: Write>(
+        buf: &mut T,
         header: Header,
-        f: impl FnOnce(&mut dyn Write) -> Result<(), IoError>,
+        f: impl FnOnce(&mut T) -> Result<(), IoError>,
     ) -> Result<(), IoError> {
         buf.write_all(header.name())?;
         buf.write_all(b": ")?;
@@ -207,9 +202,11 @@ impl PreparedResponse<'_> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(box_pointers)]
+
     use super::{Header, PreparedResponse, Response};
     use crate::content_type::Extension;
-    use std::error::Error;
+    use std::{error::Error, io::Write};
 
     #[test]
     fn test_header_names() {

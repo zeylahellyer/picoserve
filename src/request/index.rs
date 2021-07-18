@@ -1,4 +1,4 @@
-use crate::response::{Response, WriteError};
+use super::super::response::{Response, WriteError};
 use std::{
     error::Error,
     fmt::{Display, Formatter, Result as FmtResult},
@@ -60,16 +60,7 @@ impl Display for IndexError {
     }
 }
 
-impl Error for IndexError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::ReadingDirectory { source, .. } => Some(source),
-            Self::ReadingEntry { source, .. } => Some(source),
-            Self::ReadingMetadata { source, .. } => Some(source),
-            Self::WritingToStream { source, .. } => Some(source),
-        }
-    }
-}
+impl Error for IndexError {}
 
 pub fn index(stream: &mut TcpStream, path: PathBuf) -> Result<(), IndexError> {
     let mut buf = String::new();
@@ -140,8 +131,8 @@ pub fn index(stream: &mut TcpStream, path: PathBuf) -> Result<(), IndexError> {
 
 fn write_anchor(buf: &mut String, path: &str) {
     buf.push_str("<a href='./");
-    buf.push_str(&path);
+    buf.push_str(path);
     buf.push_str("'>");
-    buf.push_str(&path);
+    buf.push_str(path);
     buf.push_str("</a><br />");
 }

@@ -1,19 +1,16 @@
 [package]
 authors = ["Vivian Hellyer <vivian@hellyer.dev>"]
-categories = []
+categories = ["command-line-utilities"]
 description = "Get setup with serving a directory quickly."
 documentation = "https://github.com/vivian/picoserve"
-edition = "2015"
+edition = "2018"
 include = ["src/**/*.rs", "Cargo.toml"]
-keywords = []
+keywords = ["http server"]
 license = "ISC"
 name = "picoserve"
-publish = false
 readme = "README.md"
 repository = "https://github.com/vivian/picoserve.git"
 version = "0.1.0"
-
-[dependencies]
 
 [dev-dependencies]
 rusty-hook = "0.11.2"

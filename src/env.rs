@@ -60,15 +60,7 @@ impl Display for EnvironmentError {
     }
 }
 
-impl Error for EnvironmentError {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        match self {
-            Self::CurrentDirectoryInvalid { source } => Some(source),
-            Self::NoMatchingValue { .. } => None,
-            Self::PortNotInteger { source, .. } => Some(source),
-        }
-    }
-}
+impl Error for EnvironmentError {}
 
 #[derive(Clone, Debug)]
 pub struct Environment {
@@ -92,7 +84,7 @@ impl Environment {
                 "--dir" => {
                     let value = value(&mut args, name)?;
 
-                    dir.replace(PathBuf::from(value));
+                    dir = Some(PathBuf::from(value));
                 }
                 "--help" => {
                     println!("{}", HELP);
@@ -102,7 +94,7 @@ impl Environment {
                 "--host" => {
                     let value = value(&mut args, name)?;
 
-                    host.replace(value.parse().unwrap());
+                    host = Some(value.parse().unwrap());
                 }
                 "--index" => {
                     index = true;
@@ -110,12 +102,15 @@ impl Environment {
                 "--port" => {
                     let value = value(&mut args, name)?;
 
-                    port.replace(value.parse().map_err(|source| {
-                        EnvironmentError::PortNotInteger {
-                            port: value,
-                            source,
-                        }
-                    })?);
+                    port =
+                        Some(
+                            value
+                                .parse()
+                                .map_err(|source| EnvironmentError::PortNotInteger {
+                                    port: value,
+                                    source,
+                                })?,
+                        );
                 }
                 _ => {}
             }
