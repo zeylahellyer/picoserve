@@ -7,7 +7,7 @@ GET files and, optionally, index directories for viewing.
 ## Installation
 
 ```sh
-$ cargo install --git https://github.com/vivian/picoserve
+$ cargo install --git https://github.com/zeylahellyer/picoserve
 ```
 
 ## Usage
@@ -18,7 +18,7 @@ bind to `127.0.0.1:5555`:
 ```sh
 $ picoserve
 = Listening on 127.0.0.1:5555
-= Serving /Users/vivian/dev/picoserve
+= Serving /Users/zeyla/dev/picoserve
 ```
 
 You can then GET files:
@@ -30,7 +30,7 @@ Content-Type: text/plain
 Content-Type: 130
 
 [package]
-authors = ["Vivian Hellyer <vivian@hellyer.dev>"]
+authors = ["Zeyla Hellyer <zeyla@hellyer.dev>"]
 edition = "2018"
 name = "picoserve"
 version = "0.1.0"
@@ -44,7 +44,7 @@ You can index directories for browser viewing on port 8080:
 ```sh
 $ picoserve --index --port 8080
 = Listening on 127.0.0.1:8080
-= Serving /Users/vivian/dev/picoserve
+= Serving /Users/zeyla/dev/picoserve
 = Indexing directories for browser file listing
 ```
 

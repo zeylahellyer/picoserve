@@ -1,15 +1,15 @@
 [package]
-authors = ["Vivian Hellyer <vivian@hellyer.dev>"]
+authors = ["Zeyla Hellyer <zeyla@hellyer.dev>"]
 categories = ["command-line-utilities"]
 description = "Get setup with serving a directory quickly."
-documentation = "https://github.com/vivian/picoserve"
+documentation = "https://github.com/zeylahellyer/picoserve"
 edition = "2018"
 include = ["src/**/*.rs", "Cargo.toml"]
 keywords = ["http server"]
 license = "ISC"
 name = "picoserve"
 readme = "README.md"
-repository = "https://github.com/vivian/picoserve.git"
+repository = "https://github.com/zeylahellyer/picoserve.git"
 version = "0.1.0"
 
 [dev-dependencies]
