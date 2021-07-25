@@ -1,3 +1,5 @@
+<!-- cargo-sync-readme start -->
+
 # picoserve
 
 picoserve is a simple 0-dependency HTTP server that just serves files. There's
@@ -26,17 +28,26 @@ You can then GET files:
 ```sh
 $ http get 127.0.0.1:5555/Cargo.toml
 HTTP/1.1 200 OK
+Content-Length: 479
 Content-Type: text/plain
-Content-Type: 130
+Server: picoserve/0.1.0
 
 [package]
 authors = ["Zeyla Hellyer <zeyla@hellyer.dev>"]
+categories = ["command-line-utilities"]
+description = "Get setup with serving a directory quickly."
+documentation = "https://github.com/zeylahellyer/picoserve"
 edition = "2018"
+include = ["src/**/*.rs", "Cargo.toml"]
+keywords = ["http server"]
+license = "ISC"
 name = "picoserve"
+readme = "README.md"
+repository = "https://github.com/zeylahellyer/picoserve.git"
 version = "0.1.0"
 
-[dependencies]
-
+[dev-dependencies]
+rusty-hook = "0.11.2"
 ```
 
 You can index directories for browser viewing on port 8080:
@@ -60,3 +71,5 @@ $ picoserve --index --port 8080
 ## License
 
 ISC.
+
+<!-- cargo-sync-readme end -->
