@@ -1,5 +1,3 @@
-<!-- cargo-sync-readme start -->
-
 # picoserve
 
 picoserve is a simple 0-dependency HTTP server that just serves files. There's
@@ -71,5 +69,3 @@ $ picoserve --index --port 8080
 ## License
 
 ISC.
-
-<!-- cargo-sync-readme end -->

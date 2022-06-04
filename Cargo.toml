@@ -3,13 +3,14 @@ authors = ["Zeyla Hellyer <zeyla@hellyer.dev>"]
 categories = ["command-line-utilities"]
 description = "Get setup with serving a directory quickly."
 documentation = "https://github.com/zeylahellyer/picoserve"
-edition = "2018"
+edition = "2021"
 include = ["src/**/*.rs", "Cargo.toml"]
 keywords = ["http server"]
 license = "ISC"
 name = "picoserve"
 readme = "README.md"
 repository = "https://github.com/zeylahellyer/picoserve.git"
+rust-version = "1.61"
 version = "0.1.0"
 
 [dev-dependencies]

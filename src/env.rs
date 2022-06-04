@@ -138,17 +138,17 @@ impl Environment {
     }
 
     // Retrieve a reference to the IP address of the host to bind to.
-    pub fn host_ref(&self) -> &IpAddr {
+    pub const fn host_ref(&self) -> &IpAddr {
         &self.host
     }
 
     // Whether to serve an index.
-    pub fn index(&self) -> bool {
+    pub const fn index(&self) -> bool {
         self.index
     }
 
     // Port to bind to.
-    pub fn port(&self) -> u16 {
+    pub const fn port(&self) -> u16 {
         self.port
     }
 }

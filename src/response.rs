@@ -33,7 +33,7 @@ enum Header {
 }
 
 impl Header {
-    fn name(&self) -> &[u8] {
+    const fn name(&self) -> &[u8] {
         match self {
             Self::Allow => b"Allow",
             Self::ContentLength => b"Content-Length",
@@ -52,7 +52,7 @@ enum Status<'a> {
 }
 
 impl Status<'_> {
-    fn name(&self) -> &[u8] {
+    const fn name(&self) -> &[u8] {
         match self {
             Self::Forbidden => b"403 FORBIDDEN",
             Self::InternalServiceError => b"500 INTERNAL SERVICE ERROR",
@@ -69,20 +69,20 @@ pub struct Response<'a> {
 }
 
 impl<'a> Response<'a> {
-    pub fn new(content: &'a [u8]) -> Self {
+    pub const fn new(content: &'a [u8]) -> Self {
         Self {
             content,
             extension: None,
         }
     }
 
-    pub fn extension(mut self, extension: Option<&'a str>) -> Self {
+    pub const fn extension(mut self, extension: Option<&'a str>) -> Self {
         self.extension = extension;
 
         self
     }
 
-    pub fn ok(self) -> PreparedResponse<'a> {
+    pub const fn ok(self) -> PreparedResponse<'a> {
         PreparedResponse {
             content: self.content,
             extension: self.extension,
@@ -90,7 +90,7 @@ impl<'a> Response<'a> {
         }
     }
 
-    pub fn forbidden(self) -> PreparedResponse<'a> {
+    pub const fn forbidden(self) -> PreparedResponse<'a> {
         PreparedResponse {
             content: self.content,
             extension: self.extension,
@@ -98,7 +98,7 @@ impl<'a> Response<'a> {
         }
     }
 
-    pub fn not_found(self) -> PreparedResponse<'a> {
+    pub const fn not_found(self) -> PreparedResponse<'a> {
         PreparedResponse {
             content: self.content,
             extension: self.extension,
@@ -106,7 +106,7 @@ impl<'a> Response<'a> {
         }
     }
 
-    pub fn method_not_allowed(self, allow: &'a [&'a [u8]]) -> PreparedResponse<'a> {
+    pub const fn method_not_allowed(self, allow: &'a [&'a [u8]]) -> PreparedResponse<'a> {
         PreparedResponse {
             content: self.content,
             extension: self.extension,
@@ -114,7 +114,7 @@ impl<'a> Response<'a> {
         }
     }
 
-    pub fn internal_service_error(self) -> PreparedResponse<'a> {
+    pub const fn internal_service_error(self) -> PreparedResponse<'a> {
         PreparedResponse {
             content: self.content,
             extension: self.extension,

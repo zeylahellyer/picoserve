@@ -102,7 +102,7 @@ impl Extension {
         })
     }
 
-    pub fn mime(&self) -> Mime {
+    pub const fn mime(&self) -> Mime {
         match self {
             Self::Css => Mime::TextCss,
             Self::Csv => Mime::TextCsv,
@@ -203,7 +203,7 @@ impl Mime {
         }
     }
 
-    pub fn name(&self) -> &'static str {
+    pub const fn name(&self) -> &'static str {
         match self {
             Self::ApplicationEpub => "application/epub+zip",
             Self::ApplicationJavascript => "application/javascript",
