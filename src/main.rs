@@ -80,7 +80,6 @@
     clippy::pedantic,
     clippy::perf,
     clippy::style,
-    disjoint_capture_drop_reorder,
     future_incompatible,
     macro_use_extern_crate,
     meta_variable_misuse,
