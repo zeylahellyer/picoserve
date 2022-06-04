@@ -6,9 +6,9 @@ use super::{
     env::Environment,
     response::{Response, WriteError},
 };
+use core::fmt::{Display, Formatter, Result as FmtResult};
 use std::{
     error::Error,
-    fmt::{Display, Formatter, Result as FmtResult},
     io::{Error as IoError, Read},
     net::TcpStream,
 };

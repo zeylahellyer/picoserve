@@ -113,12 +113,8 @@ mod request;
 mod response;
 
 use self::env::{Environment, EnvironmentError};
-use std::{
-    error::Error,
-    fmt::{Display, Formatter, Result as FmtResult},
-    io::Error as IoError,
-    net::TcpListener,
-};
+use core::fmt::{Display, Formatter, Result as FmtResult};
+use std::{error::Error, io::Error as IoError, net::TcpListener};
 
 #[derive(Debug)]
 enum ApplicationError {

@@ -1,13 +1,6 @@
 use super::super::response::{Response, WriteError};
-use std::{
-    error::Error,
-    ffi::OsStr,
-    fmt::{Display, Formatter, Result as FmtResult},
-    fs,
-    io::ErrorKind,
-    net::TcpStream,
-    path::Path,
-};
+use core::fmt::{Display, Formatter, Result as FmtResult};
+use std::{error::Error, ffi::OsStr, fs, io::ErrorKind, net::TcpStream, path::Path};
 
 /// Error occurred when processing a GET request.
 #[derive(Debug)]

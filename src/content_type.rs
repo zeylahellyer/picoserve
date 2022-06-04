@@ -1,4 +1,4 @@
-use std::str;
+use core::str;
 
 pub enum Extension {
     Css,

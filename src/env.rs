@@ -1,10 +1,12 @@
+use core::{
+    fmt::{Display, Formatter, Result as FmtResult},
+    num::ParseIntError,
+};
 use std::{
     env,
     error::Error,
-    fmt::{Display, Formatter, Result as FmtResult},
     io::Error as IoError,
     net::{IpAddr, Ipv4Addr},
-    num::ParseIntError,
     path::{Path, PathBuf},
     process,
 };

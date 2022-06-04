@@ -1,7 +1,7 @@
 use super::super::response::{Response, WriteError};
+use core::fmt::{Display, Formatter, Result as FmtResult};
 use std::{
     error::Error,
-    fmt::{Display, Formatter, Result as FmtResult},
     fs,
     io::Error as IoError,
     net::{SocketAddr, TcpStream},

@@ -1,7 +1,7 @@
 use super::content_type::{Extension, Mime};
+use core::fmt::{Display, Formatter, Result as FmtResult};
 use std::{
     error::Error,
-    fmt::{Display, Formatter, Result as FmtResult},
     io::{Error as IoError, Write},
 };
 
