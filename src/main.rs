@@ -136,7 +136,14 @@ impl Display for ApplicationError {
     }
 }
 
-impl Error for ApplicationError {}
+impl Error for ApplicationError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::LoadingEnvironment { source } => Some(source),
+            Self::TcpBinding { source } => Some(source),
+        }
+    }
+}
 
 fn main() -> Result<(), ApplicationError> {
     let env =
